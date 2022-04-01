@@ -49,3 +49,18 @@ INSERT INTO `abc` (`1`, `2`, `dbl`, `blob`) VALUES (?,?,?,?);
 UPDATE `abc` SET `1` = ?, `2` = ?, `dbl` = ?, `blob` = ?;
 SELECT `1`, `2`, `dbl`, `blob` FROM `abc` ;
 ```
+### streaming
+```c++
+    tbl2.open_db("db");
+    tbl2.create_table("abc");
+    {
+        auto oz = tbl2.insert_into("abc");
+        auto ou = tbl2.update_where("abc", "where `1`=? AND `2` = ?"); 
+        oz.begin_trans();
+        oz(1, "2", 4., {0, 0});
+        oz << 2 << "e" << 1. << make_pair((char*)NULL, 0) << ios_base::end >> cout;
+        if (oz.ignored())
+            ou << 2 << "e" << 1. << make_pair((char*)NULL, 0) << where_para<int>(2) << where_para<string>("e") << ios_base::end >> cout;
+        oz.commit_trans();    
+    }
+```
