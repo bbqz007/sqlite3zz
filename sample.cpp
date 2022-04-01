@@ -1,20 +1,21 @@
 
-#include "template.h"
 #include "zqlite3.h"
 
 using namespace std;
 using namespace zhelper::zqlite3;
-static char _1[] = "SSSSS";
-void test_template()
+void test_samples()
 {
-    //st_temp_string<"SSSSS">::extract();
-
-    //st_temp_string<_1>::extract();
-
     select_para<double> a("double");
 
     select_para<char[4]> b("char[4]");
-#if 1
+	
+	/***
+	 * Sample 1: table1 with 5 fields
+	 * 	generate sql commands
+	 *  ostream for batch of insertions
+	 *  ostream for updates
+	 */
+
     auto ztbl = make_zqlite3_table(
         select_para<double>("double"),
         select_para<int>("int"),
@@ -69,7 +70,7 @@ void test_template()
         while (!iz4.eof())
         {
             iz4 >> ios_base::beg
-#if 0
+#ifdef USE_VARS_RETRIEVE_RESULTS
             >> std::get<0>(row)
             >> std::get<1>(row)
             >> std::get<2>(row)
@@ -86,8 +87,11 @@ void test_template()
         }
     }
 
-#endif
-#if 1
+	/***
+	 * Sample 2: read count from `table1`
+	 * 	you know the sql, but you may not how to retrieve the result by c capis.
+	 */
+
     auto cnttbl = make_zqlite3_table(select_para<int>("count(0)").expr());
     cnttbl.open_db("db");
     {
@@ -98,8 +102,12 @@ void test_template()
         cout << cnt << endl;
     }
     index_para("1", "2");
-#endif
-#if 1
+
+	/***
+	 * Sample 3: `abc` with 4 fields and 2 indices.
+	 * 	generate sql commands
+	 *  ostream for insertions
+	 */
     auto tbl2 = make_zqlite3_table(
         select_para<int>("1"),
         select_para<string>("2"),
@@ -123,7 +131,12 @@ void test_template()
         if (oz.ignored())
             ou << 2 << "e" << 1. << make_pair((char*)NULL, 0) << where_para<int>(2) << where_para<string>("e") << ios_base::end >> cout;
     }
-#endif
+
+	/***
+	 * Sample 4: dataset from `abc` joint with `table1`.
+	 * 	generate sql commands
+	 *  istream for select
+	 */
     auto join = make_zqlite3_table(
         select_para<int>("a.`1`").expr(),
         select_para<int>("b.`double`").expr());
@@ -144,6 +157,10 @@ void test_template()
         }
     }
     
+	/***
+	 * Sample 5: pragma.
+	 * 	generate sql commands
+	 */
     auto schema = make_zqlite3_table(select_para<string>("table_info(table1)"));
     schema.open_db("db");
     {
@@ -158,6 +175,10 @@ void test_template()
         }
     }
     
+	/***
+	 * Sample 6: declare simple table schema not by sql syntax
+	 * 	create tables with the same schema.
+	 */
     auto ztock = make_zqlite3_table(
 			select_para<int>("DATE"),
 			select_para<double>("OPEN"),
@@ -172,28 +193,8 @@ void test_template()
     auto oztk = ztock.insert_into("sh000001");	
 }
 
-template<typename... Ts1, typename... Ts2, typename Tp = std::tuple<Ts1...> > 
-void capture(Tp*, Ts1... ts1, Ts2... ts2)
-{
-    auto t1 = std::make_tuple(ts1...);
-    auto t2 = std::make_tuple(ts2...);
-   // for_each_of_tuple(t1, [](auto& i) { cout << i << ","; });
-   // cout << endl;
-    for_each_of_tuple(t2, [](auto& i) { cout << i << ","; });
-    cout << endl;
-}
-
-void test_parameter_pack()
-{
-    std::tuple<> a;
-    cout << std::tuple_size<decltype(a)>::value << endl;
-    std::tuple<int, int, int, int>* tp = 0;
-    capture(tp, 1, 2, 3, 4, "stf", "std");
-}
-
 int main()
 {
-    test_parameter_pack();
-    test_template();
+    test_samples();
     return 0;
 }
