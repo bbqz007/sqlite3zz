@@ -23,7 +23,7 @@ for sqlite3 , a c++11 stream style helper. help you get out from sql syntax and 
 * just include `zqlite3.h`
 * using namespace `zhelper::zqlite3`
   
-### dataset
+### dataset and table
 ```
   auto tbl2 = make_zqlite3_table(
         select_para<int>("1"),
@@ -33,4 +33,7 @@ for sqlite3 , a c++11 stream style helper. help you get out from sql syntax and 
         index_para("1", "2"),
         index_para("1", "2"));
 ```
+when you call `create_table`, that means a table.
+
+when you call `insert_into`, `update_where` or `select_from`, that means a dataset you are operating. the subset of the whole fields of table.
 
