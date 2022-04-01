@@ -8,20 +8,20 @@ help you generate sql commands when you forgot the sql syntax and do not want to
 --------------------------------------
 ![img](https://github.com/bbqz007/KTL/blob/master/resources/GIF_KTL_ZQLITE3_STREAMING2.gif)
 ### classes
-* select_para\<FieldType\>
-* index_para
-* where_para\<T\>
-* zqlite3_table<Fields...>
+* **select_para**\<FieldType\>
+* **index_para**
+* **where_para**\<T\>
+* **zqlite3_table**<Fields...>
   * methods
     * create_table
     * insert_into, generate an ostream
     * update_where, generate an ostream
     * select_from, generate an istream
-* zqlite3_ostream
+* **zqlite3_ostream**
   * operators
     * <<, insert or update one row: `oz << val1 << val2 << val3 << val4 << ios::end;`
     * |, `oz | val1 | val2 | val3 | val4 | ios::end;` like marking table
-* zqlite3_istream
+* **zqlite3_istream**
   * operators
     * \>\>, read result of one row: `iz >> ios::beg >> val1 >> val2 >> val3 >> val4 >> ios:end;`
  
