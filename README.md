@@ -13,21 +13,22 @@ help you generate sql commands when you forgot the sql syntax and do not want to
 * **where_para**\<T\>
 * **zqlite3_table**<Fields...>
   * methods
-    * create_table
-    * insert_into, generate an ostream
-    * update_where, generate an ostream
-    * select_from, generate an istream
+    * **`create_table`**
+    * **`insert_into`**, generate an ostream
+    * **`update_where`**, generate an ostream
+    * **`select_from`**, generate an istream
 * **zqlite3_ostream**
   * operators
-    * <<, insert or update one row: `oz << val1 << val2 << val3 << val4 << ios::end;`
-    * |, `oz | val1 | val2 | val3 | val4 | ios::end;` like marking table
+    * **`<<`**, insert or update one row: `oz << val1 << val2 << val3 << val4 << ios::end;`
+    * **`| `**, insert or update one row like building table: `oz | val1 | val2 | val3 | val4 | ios::end;` 
 * **zqlite3_istream**
   * operators
-    * \>\>, read result of one row: `iz >> ios::beg >> val1 >> val2 >> val3 >> val4 >> ios:end;`
+    * **`>>`**, read result of one row: `iz >> ios::beg >> val1 >> val2 >> val3 >> val4 >> ios:end;`
  
 ### usage
 * just include `zqlite3.h`
 * using namespace `zhelper::zqlite3`
+* `c++14` at least required
   
 ### dataset and table
 ```c++
