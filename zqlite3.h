@@ -66,6 +66,13 @@ struct sqlite3_stmt;
 #define sqlite3_prepare(...) 0
 #endif // 0
 
+#if defined QTRACE_DEBUG
+decltype(QTRACE_DEBUG)  operator << (decltype(QTRACE_DEBUG) out, const std::string& r)
+{
+	return out << r.c_str();
+}
+#endif
+
 namespace zhelper
 {
 namespace zqlite3
@@ -74,7 +81,13 @@ namespace zqlite3
 #ifdef TRACE_DEBUG
 #define tracout std::cout
 #define wtracout std::wcout
+#define traendl std::endl
+#elif defined QTRACE_DEBUG
+#define tracout QTRACE_DEBUG
+#define wtracout QTRACE_DEBUG
+#define traendl ""
 #else
+#define traendl std::endl
 struct null_ostream : protected std::ostream
 {
     template <typename T>
@@ -151,12 +164,12 @@ struct select_para<int> : public select_para_base
     const char* type() { return "INTEGER"; }
     void assign(DbStmt* stmt, int idx, const datatype& el)
     {
-        tracout << "call sqlite3_bind_int " << el << std::endl;
+        tracout << "call sqlite3_bind_int " << el << traendl;
         err_ = sqlite3_bind_int(stmt, idx, el);
     }
     void store(DbStmt* stmt, int idx, datatype& el)
     {
-        tracout << "call sqlite3_column_int " << el << std::endl;
+        tracout << "call sqlite3_column_int " << el << traendl;
         el = sqlite3_column_int(stmt, idx);
     }
 
@@ -175,12 +188,12 @@ struct select_para<int64_t> : public select_para_base
     const char* type() { return "INTEGER"; }
     void assign(DbStmt* stmt, int idx, const datatype& el)
     {
-        tracout << "call sqlite3_bind_int64 " << el << std::endl;
+        tracout << "call sqlite3_bind_int64 " << el << traendl;
         err_ = sqlite3_bind_int64(stmt, idx, el);
     }
     void store(DbStmt* stmt, int idx, datatype& el)
     {
-        tracout << "call sqlite3_column_int64 " << el << std::endl;
+        tracout << "call sqlite3_column_int64 " << el << traendl;
         el = sqlite3_column_int64(stmt, idx);
     }
     
@@ -199,7 +212,7 @@ struct select_para<double> : public select_para_base
     const char* type() { return "REAL"; }
     void assign(DbStmt* stmt, int idx, const datatype& el)
     {
-        tracout << "call sqlite3_bind_double" << std::endl;
+        tracout << "call sqlite3_bind_double" << traendl;
 #ifdef SHOW_WRONG_BINDING_CHANGE_THE_COLUMN_TYPE
         err_ = sqlite3_bind_text(stmt, idx, "abc", -1, 0);
 #else
@@ -208,7 +221,7 @@ struct select_para<double> : public select_para_base
     }
     void store(DbStmt* stmt, int idx, datatype& el)
     {
-        tracout << "call sqlite3_column_double " << el << std::endl;
+        tracout << "call sqlite3_column_double " << el << traendl;
         el = sqlite3_column_double(stmt, idx);
     }
     
@@ -234,18 +247,18 @@ struct select_para<char[_SZ], _SZ> : public select_para_base
     const char* type() { return "TEXT"; }
     void assign(DbStmt* stmt, int idx, const datatype& el)
     {
-        tracout << "call sqlite3_bind_text(-1) " << el << std::endl;
+        tracout << "call sqlite3_bind_text(-1) " << el << traendl;
         err_ = sqlite3_bind_text(stmt, idx, el, -1, 0);
     }
     void assign(DbStmt* stmt, int idx, const datatype2& el)
     {
-        tracout << "call sqlite3_bind_text" << std::endl;
+        tracout << "call sqlite3_bind_text" << traendl;
         err_ = sqlite3_bind_text(stmt, idx, el.c_str(), el.size(), 0);
     }
     void store(DbStmt* stmt, int idx, datatype& el)
     {
         //// danger
-        tracout << "call sqlite3_column_text " << std::endl;
+        tracout << "call sqlite3_column_text " << traendl;
         auto bs = sqlite3_column_bytes(stmt, idx);
         auto res = sqlite3_column_text(stmt, idx);
         memcpy((void*)el, (void*)res, bs);
@@ -253,7 +266,7 @@ struct select_para<char[_SZ], _SZ> : public select_para_base
     }
     void store(DbStmt* stmt, int idx, datatype2& el)
     {
-        tracout << "call sqlite3_column_text " << std::endl;
+        tracout << "call sqlite3_column_text " << traendl;
         auto bs = sqlite3_column_bytes(stmt, idx);
         el.reserve(bs);
         auto res = sqlite3_column_text(stmt, idx);
@@ -275,18 +288,18 @@ struct select_para<std::string> : public select_para_base
     const char* type() { return "VARCHAR"; }
     void assign(DbStmt* stmt, int idx, const datatype& el)
     {
-        tracout << "call sqlite3_bind_text(-1) " << el << std::endl;
+        tracout << "call sqlite3_bind_text(-1) " << el << traendl;
         err_ = sqlite3_bind_text(stmt, idx, el, -1, 0);
     }
     void assign(DbStmt* stmt, int idx, const datatype2& el)
     {
-        tracout << "call sqlite3_bind_text" << std::endl;
+        tracout << "call sqlite3_bind_text" << traendl;
         err_ = sqlite3_bind_text(stmt, idx, el.c_str(), el.size(), 0);
     }
     void store(DbStmt* stmt, int idx, datatype& el)
     {
         //// danger
-        tracout << "call sqlite3_column_text " << std::endl;
+        tracout << "call sqlite3_column_text " << traendl;
         auto bs = sqlite3_column_bytes(stmt, idx);
         auto res = sqlite3_column_text(stmt, idx);
         memcpy((void*)el, (void*)res, bs);
@@ -294,7 +307,7 @@ struct select_para<std::string> : public select_para_base
     }
     void store(DbStmt* stmt, int idx, datatype2& el)
     {
-        tracout << "call sqlite3_column_text " << std::endl;
+        tracout << "call sqlite3_column_text " << traendl;
         auto bs = sqlite3_column_bytes(stmt, idx);
         el.reserve(bs);
         auto res = sqlite3_column_text(stmt, idx);
@@ -316,18 +329,18 @@ struct select_para<wchar_t[_SZ], _SZ> : public select_para_base
     const char* type() { return "TEXT"; }
     void assign(DbStmt* stmt, int idx, const datatype& el)
     {
-        wtracout << L"call sqlite3_bind_text16(-1) " << el << std::endl;
+        wtracout << L"call sqlite3_bind_text16(-1) " << el << traendl;
         err_ = sqlite3_bind_text16(stmt, idx, el, -1, 0);
     }
     void assign(DbStmt* stmt, int idx, const datatype2& el)
     {
-        wtracout << L"call sqlite3_bind_text16" << el << std::endl;
+        wtracout << L"call sqlite3_bind_text16" << el << traendl;
         err_ = sqlite3_bind_text16(stmt, idx, el.c_str(), el.size() * sizeof(wchar_t), 0);
     }
     void store(DbStmt* stmt, int idx, datatype& el)
     {
         //// danger
-        tracout << "call sqlite3_column_text16 " << std::endl;
+        tracout << "call sqlite3_column_text16 " << traendl;
         auto bs = sqlite3_column_bytes(stmt, idx);
         auto res = sqlite3_column_text(stmt, idx);
         memcpy((void*)el, (void*)res, bs);
@@ -335,7 +348,7 @@ struct select_para<wchar_t[_SZ], _SZ> : public select_para_base
     }
     void store(DbStmt* stmt, int idx, datatype2& el)
     {
-        tracout << "call sqlite3_column_text16 " << std::endl;
+        tracout << "call sqlite3_column_text16 " << traendl;
         auto bs = sqlite3_column_bytes(stmt, idx);
         el.resize(bs >> 1);
         auto res = sqlite3_column_text(stmt, idx);
@@ -357,18 +370,18 @@ struct select_para<std::wstring> : public select_para_base
     const char* type() { return "VARCHAR"; }
     void assign(DbStmt* stmt, int idx, const datatype& el)
     {
-        wtracout << L"call sqlite3_bind_text16(-1) " << el << std::endl;
+        wtracout << L"call sqlite3_bind_text16(-1) " << el << traendl;
         err_ = sqlite3_bind_text16(stmt, idx, el, -1, 0);
     }
     void assign(DbStmt* stmt, int idx, const datatype2& el)
     {
-        wtracout << "call sqlite3_bind_text16" << el << std::endl;
+        wtracout << "call sqlite3_bind_text16" << el << traendl;
         err_ = sqlite3_bind_text16(stmt, idx, el.c_str(), el.size() * sizeof(wchar_t), 0);
     }
     void store(DbStmt* stmt, int idx, datatype& el)
     {
         //// danger
-        tracout << "call sqlite3_column_text16 " << std::endl;
+        tracout << "call sqlite3_column_text16 " << traendl;
         auto bs = sqlite3_column_bytes(stmt, idx);
         auto res = sqlite3_column_text(stmt, idx);
         memcpy((void*)el, (void*)res, bs);
@@ -376,7 +389,7 @@ struct select_para<std::wstring> : public select_para_base
     }
     void store(DbStmt* stmt, int idx, datatype2& el)
     {
-        tracout << "call sqlite3_column_text16 " << std::endl;
+        tracout << "call sqlite3_column_text16 " << traendl;
         auto bs = sqlite3_column_bytes(stmt, idx);
         el.resize(bs >> 1);
         auto res = sqlite3_column_text(stmt, idx);
@@ -398,7 +411,7 @@ struct select_para<unsigned char[_SZ], _SZ> : public select_para_base
     const char* type() { return "BLOB"; }
     void assign(DbStmt* stmt, int idx, const datatype& el)
     {
-        tracout << "call sqlite3_bind_blob" << std::endl;
+        tracout << "call sqlite3_bind_blob" << traendl;
         if (el.first)
             err_ = sqlite3_bind_blob(stmt, idx, el.first, el.second, 0);
         else
@@ -406,13 +419,13 @@ struct select_para<unsigned char[_SZ], _SZ> : public select_para_base
     }
     void assign(DbStmt* stmt, int idx, const datatype2& el)
     {
-        tracout << "call sqlite3_bind_blob" << std::endl;
+        tracout << "call sqlite3_bind_blob" << traendl;
         err_ = sqlite3_bind_blob(stmt, idx, el.data(), el.size(), 0);
     }
     void store(DbStmt* stmt, int idx, datatype& el)
     {
         //// danger
-        tracout << "call sqlite3_column_blob " << std::endl;
+        tracout << "call sqlite3_column_blob " << traendl;
         auto bs = sqlite3_column_bytes(stmt, idx);
         auto res = sqlite3_column_blob(stmt, idx);
         el.second = std::min(el.second, (size_t)bs);
@@ -420,7 +433,7 @@ struct select_para<unsigned char[_SZ], _SZ> : public select_para_base
     }
     void store(DbStmt* stmt, int idx, datatype2& el)
     {
-        tracout << "call sqlite3_column_blob " << std::endl;
+        tracout << "call sqlite3_column_blob " << traendl;
         auto bs = sqlite3_column_bytes(stmt, idx);
         el.reserve(bs);
         auto res = sqlite3_column_text(stmt, idx);
@@ -442,7 +455,7 @@ struct select_para<std::vector<char>> : public select_para_base
     const char* type() { return "BLOB"; }
     void assign(DbStmt* stmt, int idx, const datatype& el)
     {
-        tracout << "call sqlite3_bind_blob" << std::endl;
+        tracout << "call sqlite3_bind_blob" << traendl;
         if (el.first)
             err_ = sqlite3_bind_blob(stmt, idx, el.first, el.second, 0);
         else
@@ -450,13 +463,13 @@ struct select_para<std::vector<char>> : public select_para_base
     }
     void assign(DbStmt* stmt, int idx, const datatype2& el)
     {
-        tracout << "call sqlite3_bind_blob" << std::endl;
+        tracout << "call sqlite3_bind_blob" << traendl;
         err_ = sqlite3_bind_blob(stmt, idx, el.data(), el.size(), 0);
     }
     void store(DbStmt* stmt, int idx, datatype& el)
     {
         //// danger
-        tracout << "call sqlite3_column_blob " << std::endl;
+        tracout << "call sqlite3_column_blob " << traendl;
         auto bs = sqlite3_column_bytes(stmt, idx);
         auto res = sqlite3_column_blob(stmt, idx);
         el.second = std::min(el.second, (size_t)bs);
@@ -464,7 +477,7 @@ struct select_para<std::vector<char>> : public select_para_base
     }
     void store(DbStmt* stmt, int idx, datatype2& el)
     {
-        tracout << "call sqlite3_column_blob " << std::endl;
+        tracout << "call sqlite3_column_blob " << traendl;
         auto bs = sqlite3_column_bytes(stmt, idx);
         el.reserve(bs);
         auto res = sqlite3_column_text(stmt, idx);
@@ -509,22 +522,41 @@ struct zqlite3_istream_base
 {
     typedef std::tuple<_Fields...> _Tuple;
     struct _Err;
-    zqlite3_istream_base(_Tuple& fields, _Err& err) : fields_(fields), err_(err) {}
-    zqlite3_istream_base(const zqlite3_istream_base&) = default;
+    zqlite3_istream_base(_Tuple& fields, _Err& err) : fields_(fields), err_(err) 
+	{
+		tracout << "istr init with fields" << traendl;
+	}
+	zqlite3_istream_base(const zqlite3_istream_base& other) : fields_(other.fields_), err_(other.err_)
+	{
+		/// between master and slaver.
+		stmt_ = other.stmt_;
+		db_ = other.db_;
+	}		
     zqlite3_istream_base(zqlite3_istream_base&& mv) : fields_(mv.fields_), err_(mv.err_)
     {
+		/// Z#20220831 this should be bug at err_(mv.err_)
+		///   move between two slavers.
+		///   should not between slaver and master.
+		tracout << "istr move between two slavers." << traendl;
         std::swap(stmt_, mv.stmt_);
         std::swap(db_, mv.db_);
     }
     zqlite3_istream_base(zqlite3_istream_base&& mv, _Err& err) : fields_(mv.fields_), err_(err)
     {
+		/// Z#20220831 bug 
+		///   err sould assign to mv.err_;
+		///   move between two masters.
+		///   should not between slaver and master.
+		tracout << "istr move between two master." << traendl;
+		mverr_.err_ = mv.err_.err_;
         std::swap(stmt_, mv.stmt_);
         std::swap(db_, mv.db_);
     }
     _Tuple& fields_;
     struct _Err {
         int err_step_ = 0, err_reset_ = 0, err_ = 0;
-    } & err_;
+    } & err_,		/// master and slavers use the same err value.
+		mverr_;		/// master temporary store the movable value.
     DbStmt* stmt_ = 0;
     Db* db_ = 0; // weak
 
@@ -546,7 +578,14 @@ struct zqlite3_istream<(size_t)-1, _Fields...> : public zqlite3_istream_base<_Fi
     typedef std::tuple<_Fields...> _Tuple;
     typedef zqlite3_istream_base<_Fields...> _Base;
     zqlite3_istream(_Tuple& base) : _Base(base, err__) {}
-    zqlite3_istream(zqlite3_istream&& base) : _Base(std::move(base), err__) {}
+    zqlite3_istream(zqlite3_istream&& base) : _Base(std::move(base), err__) 
+	{
+		/// Z#20220831 bug
+		///   derive init the err__ after base init.
+		///   mverr_ temporary store the value from movable.
+		/// move between two masters.
+		_Base::err_.err_ = _Base::mverr_.err_;
+	}
     zqlite3_istream(const zqlite3_istream&) = delete;
     
     typename _Base::_Err err__;
@@ -559,12 +598,12 @@ struct zqlite3_istream<(size_t)-1, _Fields...> : public zqlite3_istream_base<_Fi
     {
         if (stmt)
         {
-            tracout << "call reset stmt" << std::endl;
+            tracout << "call reset stmt" << traendl;
             _Base::err_.err_reset_ = sqlite3_reset(stmt);
         }
         if (_Base::stmt_)
         {
-            tracout << "call finalize stmt" << std::endl;
+            tracout << "call finalize stmt" << traendl;
             sqlite3_finalize(_Base::stmt_);
         }
         _Base::stmt_ = stmt;
@@ -576,7 +615,7 @@ struct zqlite3_istream<(size_t)-1, _Fields...> : public zqlite3_istream_base<_Fi
         char* errmsg = 0;
         int err = sqlite3_exec(_Base::db_, "BEGIN TRANSACTION", 0,  0, &errmsg);
         if (err)
-            tracout << "begin trans err: " << errmsg << std::endl;
+            tracout << "begin trans err: " << errmsg << traendl;
         return err;
     }
 
@@ -585,7 +624,7 @@ struct zqlite3_istream<(size_t)-1, _Fields...> : public zqlite3_istream_base<_Fi
         char* errmsg = 0;
         int err = sqlite3_exec(_Base::db_, "END TRANSACTION", 0,  0, &errmsg);
         if (err)
-            tracout << "ends trans err: " << errmsg << std::endl;
+            tracout << "ends trans err: " << errmsg << traendl;
         return err;
     }
 
@@ -635,7 +674,7 @@ struct zqlite3_istream<(size_t)-1, _Fields...> : public zqlite3_istream_base<_Fi
     {
         if (opcode == std::ios::beg)
         {
-            tracout << "call next step" << std::endl;
+            tracout << "call next step" << traendl;
             _Base::err_.err_step_ = sqlite3_step(_Base::stmt_);
         }
         return *this;
@@ -678,8 +717,8 @@ struct zqlite3_istream : public zqlite3_istream_base<_Fields...>
 {
     typedef std::tuple<_Fields...> _Tuple;
     typedef zqlite3_istream_base<_Fields...> _Base;
-    zqlite3_istream(const _Base& base) : _Base(base) {}
-    zqlite3_istream(zqlite3_istream&& base) : _Base(std::move(base)) {}
+    zqlite3_istream(const _Base& base) : _Base(base) {}		/// from master to slaver
+    zqlite3_istream(zqlite3_istream&& base) : _Base(std::move(base)) {}		/// between slavers
 
     ~zqlite3_istream()
     {
@@ -749,10 +788,10 @@ struct zqlite3_istream<0, _Fields...> : public zqlite3_istream_base<_Fields...>
 
     void operator >> (std::ostream& os)
     {
-        for_each_of_tuple(_Base::fields_, [&os](auto& i) { os << i.name() << " bind err=" << i.err_ << std::endl; });
-        os << "stmt step err=" << _Base::err_.err_step_ << std::endl;
-        os << "stmt reset err=" << _Base::err_.err_reset_ << std::endl;
-        os << "total changs=" << _Base::total_changes() << std::endl;
+        for_each_of_tuple(_Base::fields_, [&os](auto& i) { os << i.name() << " bind err=" << i.err_ << traendl; });
+        os << "stmt step err=" << _Base::err_.err_step_ << traendl;
+        os << "stmt reset err=" << _Base::err_.err_reset_ << traendl;
+        os << "total changs=" << _Base::total_changes() << traendl;
     }
 
     zqlite3_istream<0, _Fields...>&
@@ -824,12 +863,12 @@ struct zqlite3_ostream<(size_t)-1, _Fields...> : public zqlite3_ostream_base<_Fi
     {
         if (stmt)
         {
-            tracout << "call reset stmt" << std::endl;
+            tracout << "call reset stmt" << traendl;
             _Base::err_.err_reset_ = sqlite3_reset(stmt);
         }
         if (_Base::stmt_)
         {
-            tracout << "call finalize stmt" << std::endl;
+            tracout << "call finalize stmt" << traendl;
             sqlite3_finalize(_Base::stmt_);
         }
         _Base::stmt_ = stmt;
@@ -841,7 +880,7 @@ struct zqlite3_ostream<(size_t)-1, _Fields...> : public zqlite3_ostream_base<_Fi
         char* errmsg = 0;
         int err = sqlite3_exec(_Base::db_, "BEGIN TRANSACTION", 0,  0, &errmsg);
         if (err)
-            tracout << "begin trans err: " << errmsg << std::endl;
+            tracout << "begin trans err: " << errmsg << traendl;
         return err;
     }
 
@@ -850,7 +889,7 @@ struct zqlite3_ostream<(size_t)-1, _Fields...> : public zqlite3_ostream_base<_Fi
         char* errmsg = 0;
         int err = sqlite3_exec(_Base::db_, "END TRANSACTION", 0,  0, &errmsg);
         if (err)
-            tracout << "ends trans err: " << errmsg << std::endl;
+            tracout << "ends trans err: " << errmsg << traendl;
         return err;
     }
 
@@ -1045,10 +1084,10 @@ struct zqlite3_ostream<0, _Fields...> : public zqlite3_ostream_base<_Fields...>
 
     void operator >> (std::ostream& os)
     {
-        for_each_of_tuple(_Base::fields_, [&os](auto& i) { os << i.name() << " bind err=" << i.err_ << std::endl; });
-        os << "stmt step err=" << _Base::err_.err_step_ << std::endl;
-        os << "stmt reset err=" << _Base::err_.err_reset_ << std::endl;
-        os << "total changs=" << _Base::total_changes() << std::endl;
+        for_each_of_tuple(_Base::fields_, [&os](auto& i) { os << i.name() << " bind err=" << i.err_ << traendl; });
+        os << "stmt step err=" << _Base::err_.err_step_ << traendl;
+        os << "stmt reset err=" << _Base::err_.err_reset_ << traendl;
+        os << "total changs=" << _Base::total_changes() << traendl;
     }
     
     void operator | (std::ostream& os)
@@ -1061,9 +1100,9 @@ struct zqlite3_ostream<0, _Fields...> : public zqlite3_ostream_base<_Fields...>
     {
         if (opcode == std::ios::end)
         {
-            tracout << "call next step" << std::endl;
+            tracout << "call next step" << traendl;
             _Base::err_.err_step_ = sqlite3_step(_Base::stmt_);
-            tracout << "call reset statment" << std::endl;
+            tracout << "call reset statment" << traendl;
             _Base::err_.err_reset_ = sqlite3_reset(_Base::stmt_);
         }
         return *this;
@@ -1164,10 +1203,10 @@ template<typename... Ts>
 struct zqlite3_table
 {
     std::shared_ptr<Db> db_;
-    int err_;
+    int err_ = 0;
     struct {
         int ctl_detach :1;
-    } ctl_;
+	} ctl_ = { 0 };
 
     template<typename... _Ts>
     zqlite3_table(_Ts... ts)
@@ -1177,7 +1216,7 @@ struct zqlite3_table
 
     ~zqlite3_table()
     {
-        ctl_.ctl_detach = 0;
+        // ctl_.ctl_detach = 0;
         db_.reset();
     }
 
@@ -1410,30 +1449,46 @@ struct zqlite3_table
 
     int open_db(const std::string& dbname)
     {
-        tracout << "call sqlite3_open " << dbname << std::endl;
+        tracout << "call sqlite3_open " << dbname << traendl;
         Db* db = 0; // TODO:
         err_ = sqlite3_open(dbname.c_str(), &db);
-        db_.reset(db, [this](Db* db) {
-                    if (!ctl_.ctl_detach)
-                    {
-                        tracout << "call sqlite3_close " << std::endl;
-                        err_ = sqlite3_close(db);
-                    }
-                  });
+		manage_db(db);
+		/// Z#20220831 bug
+		///   SQLITE_OK when db is NULL
+		if (!db && SQLITE_OK == err_)
+			err_ = SQLITE_NOTADB;
         return err_;
     }
 
+	bool manage_db(Db* db, bool managed = true)
+	{
+		ctl_.ctl_detach = (managed) ? 0 : 1;
+		db_.reset(db, [this](Db* db) {
+			if (!ctl_.ctl_detach)
+			{
+				tracout << "call sqlite3_close " << traendl;
+				err_ = sqlite3_close(db);
+			}
+			else
+			{
+				err_ = 0;
+			}
+		});
+		return true;
+	}
+
     bool attach_db(Db* db)
     {
-        ctl_.ctl_detach = 0;
-        db_.reset(db, [](Db*){});
+		manage_db(db, false);
+		return true;
     }
 
     Db* detach_db()
     {
-        ctl_.ctl_detach = 1;
+		ctl_.ctl_detach = 1;
         Db* db = db_.get();
         db_.reset();
+		ctl_.ctl_detach = 0;
         return db;
     }
 
@@ -1448,11 +1503,11 @@ struct zqlite3_table
     int create_table(const std::string& tblname)
     {
         auto cmd = create_table_statment(tblname);
-        tracout << "call exec statment, " << cmd << std::endl;
+        tracout << "call exec statment, " << cmd << traendl;
         char* errmsg = 0;
         auto err = sqlite3_exec(db_.get(), cmd.c_str(), 0, 0, &errmsg);
         if (err)
-            tracout << errmsg << std::endl;
+            tracout << errmsg << traendl;
         return err;
     }
 
@@ -1482,14 +1537,14 @@ struct zqlite3_table
     {
         zqlite3_ostream<(size_t)-1, Ts...> base(fields_);
         auto cmd = insert_statment(tblname);
-        tracout << "call prepare insert statment, " << cmd << std::endl;
+        tracout << "call prepare insert statment, " << cmd << traendl;
         DbStmt*& stmt = base.stmt_;
         Db* db = db_.get();
         const char* problem = 0;
         base.db_ = db;
         base.err_.err_ = sqlite3_prepare(db_.get(), cmd.c_str(), cmd.size(), &stmt, &problem);
         if (base.err_.err_)
-            tracout << "error (" << sqlite3_errstr(base.err_.err_) << ")at " << problem << std::endl;
+            tracout << "error (" << sqlite3_errstr(base.err_.err_) << ")at " << problem << traendl;
         return std::move ( base );
     }
 
@@ -1505,7 +1560,7 @@ struct zqlite3_table
         base.db_ = db;
         base.err_ = sqlite3_prepare(db_.get(), cmd.c_str(), cmd.size(), &stmt, &problem);
         if (base.err_)
-            tracout << "error (" << sqlite3_errstr(base.err_) << ")at " << problem << std::endl;
+            tracout << "error (" << sqlite3_errstr(base.err_) << ")at " << problem << traendl;
         return std::move ( base );
     }
 
@@ -1521,7 +1576,7 @@ struct zqlite3_table
         base.err_.err_ = sqlite3_prepare(db_.get(), cmd.c_str(), cmd.size(), &stmt, &problem);
         if (base.err_.err_)
         {
-            tracout << "error (" << sqlite3_errstr(base.err_.err_) << ")at " << problem << std::endl;
+            tracout << "error (" << sqlite3_errstr(base.err_.err_) << ")at " << problem << traendl;
         }
         return std::move ( base );
     }
@@ -1539,7 +1594,7 @@ struct zqlite3_table
         base.err_.err_ = sqlite3_prepare(db_.get(), cmd.c_str(), cmd.size(), &stmt, &problem);
         if (base.err_.err_)
         {
-            tracout << "error (" << sqlite3_errstr(base.err_.err_) << ")at " << problem << std::endl;
+            tracout << "error (" << sqlite3_errstr(base.err_.err_) << ")at " << problem << traendl;
         }
         return std::move ( base );
     }
@@ -1556,7 +1611,7 @@ struct zqlite3_table
         base.err_.err_ = sqlite3_prepare(db_.get(), cmd.c_str(), cmd.size(), &stmt, &problem);
         if (base.err_.err_)
         {
-            tracout << "error (" << sqlite3_errstr(base.err_.err_) << ")at " << problem << std::endl;
+            tracout << "error (" << sqlite3_errstr(base.err_.err_) << ")at " << problem << traendl;
         }
         return std::move ( base );
     }
@@ -1577,10 +1632,33 @@ struct zqlite3_table
         base.err_.err_ = sqlite3_prepare(db_.get(), cmd.c_str(), cmd.size(), &stmt, &problem);
         if (base.err_.err_)
         {
-            tracout << "error (" << sqlite3_errstr(base.err_.err_) << ")at " << problem << std::endl;
+            tracout << "error (" << sqlite3_errstr(base.err_.err_) << ")at " << problem << traendl;
         }
         return std::move ( base );
     }
+
+	//// pragma
+	zqlite3_istream<(size_t)-1, Ts...> pragma(const std::string& pragmacmd)
+	{
+		zqlite3_istream<(size_t)-1, Ts...> base(fields_);
+		std::string cmd;
+		cmd.reserve(std::get<0>(fields_).name().size());
+		cmd = "PRAGMA ";
+		cmd += pragmacmd;
+		cmd += ";";
+		DbStmt*& stmt = base.stmt_;
+		Db* db = db_.get();
+		const char* problem = 0;
+		base.db_ = db;
+		base.err_.err_ = sqlite3_prepare(db_.get(), cmd.c_str(), cmd.size(), &stmt, &problem);
+		if (base.err_.err_)
+		{
+			tracout << "error (" << sqlite3_errstr(base.err_.err_) << ")at " << problem << traendl;
+		}
+		return std::move(base);
+	}
+
+	bool quick_check();
 };
 
 
@@ -1708,6 +1786,28 @@ template<typename... Res, typename... Res2>
 auto _split_types2(std::tuple<Res...>* res, std::tuple<Res2...>* res2)
 {
     return (std::tuple<std::tuple<Res...>, std::tuple<Res2...> >*)0;
+}
+
+extern "C"
+void __stdcall OutputDebugStringA(
+	const char* lpOutputString
+	);
+
+template<typename... Ts>
+bool zqlite3_table<Ts...>::quick_check()
+{
+	auto ds = make_zqlite3_table(
+		select_para<std::string>("quick_check"));
+	ds.attach_db(db_.get());
+	auto iz = ds.pragma("quick_check");
+	auto row = ds.create_row();
+	iz >> std::ios::beg;
+	if (!iz.eof())
+		iz >> row;
+	OutputDebugStringA(std::get<0>(row).c_str());
+	OutputDebugStringA("A");
+	ds.detach_db();
+	return std::get<0>(row) == "ok";
 }
 
 }; // end NS zqlite3
