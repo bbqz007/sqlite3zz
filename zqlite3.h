@@ -1788,11 +1788,6 @@ auto _split_types2(std::tuple<Res...>* res, std::tuple<Res2...>* res2)
     return (std::tuple<std::tuple<Res...>, std::tuple<Res2...> >*)0;
 }
 
-extern "C"
-void __stdcall OutputDebugStringA(
-	const char* lpOutputString
-	);
-
 template<typename... Ts>
 bool zqlite3_table<Ts...>::quick_check()
 {
@@ -1804,8 +1799,6 @@ bool zqlite3_table<Ts...>::quick_check()
 	iz >> std::ios::beg;
 	if (!iz.eof())
 		iz >> row;
-	OutputDebugStringA(std::get<0>(row).c_str());
-	OutputDebugStringA("A");
 	ds.detach_db();
 	return std::get<0>(row) == "ok";
 }
