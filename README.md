@@ -20,10 +20,12 @@ help you generate sql commands when you forgot the sql syntax and do not want to
 * **zqlite3_ostream**
   * operators
     * **`<<`**, insert or update one row: `oz << val1 << val2 << val3 << val4 << ios::end;`
-    * **`| `**, insert or update one row like building table: `oz | val1 | val2 | val3 | val4 | ios::end;` 
+    * **`| `**, insert or update one row like building table: `oz | val1 | val2 | val3 | val4 | ios::end;`
+    * **`<< std::ios::end`**, fire `sqlite3_step`
 * **zqlite3_istream**
   * operators
     * **`>>`**, read result of one row: `iz >> ios::beg >> val1 >> val2 >> val3 >> val4 >> ios:end;`
+    * **`>> std::ios::beg`**, fire `sqlite3_step`
  
 ### usage
 * just include `zqlite3.h`
