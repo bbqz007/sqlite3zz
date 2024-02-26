@@ -4,7 +4,32 @@ for sqlite3 , a c++11 **stream style** helper. help you **get out from sql synta
 easy binding parameters, and leave from how many `?` to bind. 
 
 help you generate sql commands when you forgot the sql syntax and do not want to read the manual document again.
-
+--------------------------------------
+## how does sqlite3zz design
+### wrap query procedure flow
+```c++
+auto schema = make_zqlite3_table(...);  // define which columns to access
+schema.open_db("your.db");
+auto istream = schema.select_from("table_name");  // generate sql statment and sqlite3_prepare it.
+istream >> std::ios::beg;              // calling sqlite3_step;
+istream >> value1;                     // sqlite3_column_xxx, read data of first column of result record
+istream >> value2;                     // sqlite3_column_xxx, read data of second column of result record
+...
+istream >> valueN;                     // sqlite3_column_xxx, read data of last column of result record
+```
+### wrap insert procedure flow
+```c++
+auto schema = make_zqlite3_table(...);  // define which columns to access
+schema.open_db("your.db");
+auto ostream = schema.insert_into("table_name");  // generate sql statment and sqlite3_prepare it.
+ostream.begin_trans();
+ostream << value1;                     // sqlite3_bind_xxx, bind data of first column of record
+ostream << value2;                     // sqlite3_bind_xxx, bind data of second column of record
+...
+ostream << valueN;                     // sqlite3_bind_xxx, bind data of last column of record
+ostream << std::ios::end;              // calling sqlite3_step and sqlite3_reset, loop to insert another row;
+ostream.commit_trans();
+```
 --------------------------------------
 ![img](https://github.com/bbqz007/KTL/blob/master/resources/GIF_KTL_ZQLITE3_STREAMING2.gif)
 ### classes
