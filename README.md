@@ -6,6 +6,8 @@ easy binding parameters, and leave from how many `?` to bind.
 help you generate sql commands when you forgot the sql syntax and do not want to read the manual document again.
 --------------------------------------
 ## how does sqlite3zz design
+* wrap query procedure flow
+* wrap insert procedure flow
 ### wrap query procedure flow
 ```c++
 auto schema = make_zqlite3_table(...);  // define which columns to access
