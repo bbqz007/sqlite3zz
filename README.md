@@ -1,8 +1,10 @@
 # sqlite3zz
 * header only, template and inline.
-* for sqlite3 , a c++11 **stream style** helper. help you **get out from sql syntax and c apis**. 
-* easy binding parameters, and leave from how many `?` to bind. 
-* help you generate sql commands when you forgot the sql syntax and do not want to read the manual document again.
+* for sqlite3 c++ programming, help you **get out from sql syntax and c apis**. 
+* easy way binding parameters, and leave from how many `?` to bind. 
+* help you generate sql commands
+  * maybe you forgot the sql syntax
+  * and do not want to read the manual document again.
 
 --------------------------------------
 ## how does sqlite3zz design
