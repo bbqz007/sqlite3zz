@@ -910,6 +910,16 @@ struct zqlite3_ostream<(size_t)-1, _Fields...> : public zqlite3_ostream_base<_Fi
         std::get<0>(_Base::fields_).assign(_Base::stmt_, 1, el);
         return std::move(next);
     }
+	
+	/// Z#20240225
+    zqlite3_ostream<0, _Fields...>
+    operator << (std::tuple<typename _Fields::datatype2...>& tuple)
+    {
+        zqlite3_ostream<0, _Fields...> next = std::move(iterate_tuple<0>(*this, tuple));
+        /// Z#20240225 should not `<< end` to fire sqlite_step, 
+        ///  if update ostream, users should `<< where_para`
+        return next;
+    }
 
     //// syntax ( )
     zqlite3_ostream&
@@ -963,6 +973,20 @@ protected:
     void iterate (zqlite3_ostream<0, _Fields...>& exec)
     {
         exec << std::ios_base::end;
+    }
+	
+	/// Z#20240225
+    template<size_t N, typename _Os, typename _Tuple>
+    auto iterate_tuple (_Os& Oz, _Tuple& tp, typename std::enable_if<N == std::tuple_size<_Tuple>::value, void>::type* = 0)
+    {
+        return std::move(Oz);
+    }
+    
+    template<size_t N, typename _Os, typename _Tuple>
+    auto iterate_tuple (_Os& Oz, _Tuple& tp, typename std::enable_if<N < std::tuple_size<_Tuple>::value, void>::type* = 0)
+    {
+        auto next = Oz << std::get<N>(tp);
+        return iterate_tuple<N+1> (next, tp);
     }
 };
 
@@ -1446,6 +1470,115 @@ struct zqlite3_table
         statment += ";";
         return statment;
     }
+	
+	/// Z#20240225
+    ///  upsert need least 3.24, you need to SELECT sqlite_version() to check.
+    std::string upsert_statment(const std::string& tblname)
+    {
+        auto NF = std::tuple_size<decltype(fields_)>::value;
+        size_t predsize = tblname.size();
+        for_each_fields([&predsize](auto& i){
+            predsize += i.name().size();        // `%s`,
+        });
+        std::string statment;
+        statment.reserve(predsize + NF * 12 + 128);
+        statment += "INSERT INTO `";
+        statment += tblname;
+        statment += "` (";
+        for_each_fields([&statment](auto& i){
+            statment += "`";
+            statment += i.name();
+            statment += "`, ";
+        });
+        statment.resize(statment.size()-2);
+        statment += ") VALUES (";
+        for_each_fields([&statment](auto& i){
+            statment += "?,";
+        });
+        statment.resize(statment.size()-1);
+        statment += ") ON CONFLICT DO UPDATE SET ";
+        for_each_fields([&statment](auto& i){
+            statment += "`";
+            statment += i.name();
+            statment += "` = EXCLUDED.`";
+            statment += i.name();
+            statment += "`, ";
+        });
+        statment.resize(statment.size()-2);
+        return statment;
+    }
+    
+    /// Z#20240225
+    ///  upsert need least 3.24, you need to SELECT sqlite_version() to check.
+    std::string upsert_conflict_statment(const std::string& tblname, const std::string& conflict_columns)
+    {
+        if (conflict_columns.empty())
+            return upsert_statment(tblname);
+        auto NF = std::tuple_size<decltype(fields_)>::value;
+        size_t predsize = tblname.size();
+        for_each_fields([&predsize](auto& i){
+            predsize += i.name().size();        // `%s`,
+        });
+        std::string statment;
+        statment.reserve(predsize + NF * 12 + 128);
+        statment += "INSERT INTO `";
+        statment += tblname;
+        statment += "` (";
+        for_each_fields([&statment](auto& i){
+            statment += "`";
+            statment += i.name();
+            statment += "`, ";
+        });
+        statment.resize(statment.size()-2);
+        statment += ") VALUES (";
+        for_each_fields([&statment](auto& i){
+            statment += "?,";
+        });
+        statment.resize(statment.size()-1);
+        statment += ") ON CONFLICT(";
+        statment += conflict_columns;
+        statment += ") DO UPDATE SET ";
+        for_each_fields([&statment](auto& i){
+            statment += "`";
+            statment += i.name();
+            statment += "` = EXCLUDED.`";
+            statment += i.name();
+            statment += "`, ";
+        });
+        statment.resize(statment.size()-2);
+        return std::move(statment);
+    }
+    
+    /// Z#20240225
+    ///  to support only execute functions, such as sqlite_version()
+    ///  the select_para should be set as expr().
+    std::string select_function_only_statment()
+    {
+        auto NF = std::tuple_size<decltype(fields_)>::value;
+        size_t predsize = 0;
+        for_each_fields([&predsize](auto& i){
+            predsize += i.name().size();        // `%s`,
+        });
+        std::string statment;
+        statment.reserve(predsize + NF * 12 + 128);
+        statment += "SELECT ";
+        for_each_fields([&statment](auto& i){
+            if (!i.expr_)
+            {
+                statment += "`";
+                statment += i.name();
+                statment += "`, ";
+            }
+            else
+            {
+                statment += i.name();
+                statment += ", ";
+            }
+        });
+        statment.resize(statment.size()-2);
+        statment += ";";
+        return statment;
+    }
 
     int open_db(const std::string& dbname)
     {
@@ -1657,6 +1790,57 @@ struct zqlite3_table
 		}
 		return std::move(base);
 	}
+	
+	/// Z#20240225
+	/// like select function(), only for executing function
+	zqlite3_istream<(size_t)-1, Ts...> select_function_only()
+    {
+        zqlite3_istream<(size_t)-1, Ts...> base(fields_);
+        auto cmd = select_function_only_statment();
+        tracout << "call prepare select statment, " << cmd << "\n";
+        DbStmt*& stmt = base.stmt_;
+        Db* db = db_.get();
+        const char* problem = 0;
+        base.db_ = db;
+        base.err_.err_ = sqlite3_prepare(db_.get(), cmd.c_str(), cmd.size(), &stmt, &problem);
+        if (base.err_.err_)
+        {
+            tracout << "error (" << sqlite3_errstr(base.err_.err_) << ")at " << problem << std::endl;
+        }
+        return std::move ( base );
+    }
+    
+    //// upsert into (3.24 at least needed)
+    zqlite3_ostream<(size_t)-1, Ts...> upsert_into(const std::string& tblname)
+    {
+        zqlite3_ostream<(size_t)-1, Ts...> base(fields_);
+        auto cmd = upsert_statment(tblname);
+        tracout << "call prepare insert statment, " << cmd << std::endl;
+        DbStmt*& stmt = base.stmt_;
+        Db* db = db_.get();
+        const char* problem = 0;
+        base.db_ = db;
+        base.err_.err_ = sqlite3_prepare(db_.get(), cmd.c_str(), cmd.size(), &stmt, &problem);
+        if (base.err_.err_)
+            tracout << "error (" << sqlite3_errstr(base.err_.err_) << ")at " << problem << std::endl;
+        return std::move ( base );
+    }
+    
+    //// upsert into with conflict columns (3.24 at least needed)
+    zqlite3_ostream<(size_t)-1, Ts...> upsert_conflict_into(const std::string& tblname, const std::string& conflict_columns)
+    {
+        zqlite3_ostream<(size_t)-1, Ts...> base(fields_);
+        auto cmd = upsert_conflict_statment(tblname, conflict_columns);
+        tracout << "call prepare insert statment, " << cmd << std::endl;
+        DbStmt*& stmt = base.stmt_;
+        Db* db = db_.get();
+        const char* problem = 0;
+        base.db_ = db;
+        base.err_.err_ = sqlite3_prepare(db_.get(), cmd.c_str(), cmd.size(), &stmt, &problem);
+        if (base.err_.err_)
+            tracout << "error (" << sqlite3_errstr(base.err_.err_) << ")at " << problem << std::endl;
+        return std::move ( base );
+    }
 
 	bool quick_check();
 };
