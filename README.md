@@ -1,16 +1,16 @@
 # sqlite3zz
-for sqlite3 , a c++11 **stream style** helper. help you **get out from sql syntax and c apis**. 
+* header only, template and inline.
+* for sqlite3 , a c++11 **stream style** helper. help you **get out from sql syntax and c apis**. 
+* easy binding parameters, and leave from how many `?` to bind. 
+* help you generate sql commands when you forgot the sql syntax and do not want to read the manual document again.
 
-easy binding parameters, and leave from how many `?` to bind. 
-
-help you generate sql commands when you forgot the sql syntax and do not want to read the manual document again.
 --------------------------------------
 ## how does sqlite3zz design
 * wrap query procedure flow
 * wrap insert procedure flow
 ### wrap query procedure flow
 ```c++
-auto schema = make_zqlite3_table(...);  // define which columns to access
+auto schema = make_zqlite3_table(...);  // define which columns to access, or dataset
 schema.open_db("your.db");
 auto istream = schema.select_from("table_name");  // generate sql statment and sqlite3_prepare it.
 istream >> std::ios::beg;              // calling sqlite3_step;
