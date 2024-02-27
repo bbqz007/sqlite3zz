@@ -21,7 +21,7 @@ auto schema = make_zqlite3_table(
     select_para<std::vector<char>>("col_blob_name4"),     // col_blob_name4 BLOB
     index_para("col_name1").pkey().asc());                // PRIMARY KEY(col_name1, ASC)
 schema.open_db("your.db");
-schema.create_table("table_name");                        // use the table schema create table on your.db
+schema.create_table("table_name");                        // use the table schema to create table on your.db
 ```
 ### wrap query procedure flow
 ```c++
