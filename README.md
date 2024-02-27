@@ -15,11 +15,11 @@
 ```c++
 /** define a table schema */
 auto schema = make_zqlite3_table(
-				select_para<int>("col_name1"),                        // col_name1 INT
-				select_para<double>("col_name2"),                     // col_name2 REAL
-				select_para<std::string>("col_vchar_name3"),          // col_vchar_name3 VCHAR
-				select_para<std::vector<char>>("col_blob_name4"),     // col_blob_name4 BLOB
-				index_para("col_name1").pkey().asc());                // PRIMARY KEY(col_name1, ASC)
+    select_para<int>("col_name1"),                        // col_name1 INT
+    select_para<double>("col_name2"),                     // col_name2 REAL
+    select_para<std::string>("col_vchar_name3"),          // col_vchar_name3 VCHAR
+    select_para<std::vector<char>>("col_blob_name4"),     // col_blob_name4 BLOB
+    index_para("col_name1").pkey().asc());                // PRIMARY KEY(col_name1, ASC)
 schema.open_db("your.db");
 schema.create_table("table_name");                        // use the table schema create table on your.db
 ```
