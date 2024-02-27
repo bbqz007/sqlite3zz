@@ -8,8 +8,21 @@
 
 --------------------------------------
 ## how does sqlite3zz design
+* wrap define a table schema or a dataset schema
 * wrap query procedure flow
 * wrap insert procedure flow
+### wrap define a table schema or a dataset schema
+```c++
+/** define a table schema */
+auto schema = make_zqlite3_table(
+				select_para<int>("col_name1"),                        // col_name1 INT
+				select_para<double>("col_name2"),                     // col_name2 REAL
+				select_para<std::string>("col_vchar_name3"),          // col_vchar_name3 VCHAR
+				select_para<std::vector<char>>("col_blob_name4"),     // col_blob_name4 BLOB
+				index_para("col_name1").pkey().asc());                // PRIMARY KEY(col_name1, ASC)
+schema.open_db("your.db");
+schema.create_table("table_name");                        // use the table schema create table on your.db
+```
 ### wrap query procedure flow
 ```c++
 auto schema = make_zqlite3_table(...);  // define which columns to access, or dataset
