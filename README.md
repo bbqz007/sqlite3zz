@@ -1,3 +1,27 @@
+# zqlite3 Library
+
+The provided code is part of a C++ project named either "zqlite3" or "sqlite3zz", as indicated by the initial comment block. This project aims to simplify interactions with SQLite databases in C++ by serving as a wrapper or utility library. It encapsulates SQLite's C API into a more C++-friendly interface, leveraging modern C++ features such as templates, tuples, and smart pointers to provide a safer and more convenient way to work with SQLite databases.
+
+## Key Components and Features
+
+1. **Parameter Binding and Result Storing Classes**: `select_para`, `index_para`, and `where_para` are template classes designed for binding parameters to SQL statements and storing results from queries. These classes are specialized for different data types such as `int`, `int64_t`, `double`, `std::string`, `std::wstring`, and blobs.
+
+2. **Table and Stream Classes**: `zqlite3_table` represents a database table, allowing for the binding of parameter types and columns. `zqlite3_ostream` and `zqlite3_istream` are used for parameter binding in insert/update operations and storing results from select queries, respectively.
+
+3. **Factory Functions**: The `make_zqlite3_table` function is a factory function that creates `zqlite3_table` objects, facilitating the setup of tables with specific columns and types.
+
+4. **Helper Metafunctions**: Utility metafunctions like `for_each_of_tuple` and `split_types` operate on tuples, aiding in the implementation of the library's functionality.
+
+5. **Database Management**: Mechanisms for opening, closing, and managing SQLite databases (`open_db`, `close_db`, `attach_db`, `detach_db`) are provided, including executing SQL commands for operations like table creation, insertion, update, selection, and upsert.
+
+6. **Debugging and Logging**: Conditional compilation is used to include debugging and logging capabilities (`tracout`, `wtracout`), enabling the library to output diagnostic information based on the build configuration.
+
+7. **Error Handling**: Basic error handling capabilities are included, with classes and functions returning error codes or setting error flags upon encountering issues.
+
+8. **Pragma and SQLite Function Execution**: Support for executing SQLite PRAGMA commands and other SQLite functions directly through the `pragma` and `select_function_only` methods.
+
+This library abstracts much of the boilerplate and manual resource management associated with using the SQLite C API directly, offering a more type-safe and convenient interface for C++ developers working with SQLite databases.
+
 # sqlite3zz
 * header only, template and inline.
 * for sqlite3 c++ programming, help you **get out from sql syntax and c apis**. 
