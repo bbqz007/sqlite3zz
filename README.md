@@ -22,6 +22,30 @@ The provided code is part of a C++ project named either "zqlite3" or "sqlite3zz"
 
 This library abstracts much of the boilerplate and manual resource management associated with using the SQLite C API directly, offering a more type-safe and convenient interface for C++ developers working with SQLite databases.
 
+# zqlite3 Library
+
+提供的代码是一个名为 "zqlite3" 或 "sqlite3zz" 的 C++ 项目的一部分，如初始注释块所示。该项目旨在通过作为包装器或实用库来简化 C++ 中与 SQLite 数据库的交互。它将 SQLite 的 C API 封装到更适合 C++ 的接口中，利用现代 C++ 特性（如模板、元组和智能指针）提供了一种更安全、更方便的方式来处理 SQLite 数据库。
+
+## 关键组件和特性
+
+1. **参数绑定和结果存储类**：`select_para`、`index_para` 和 `where_para` 是模板类，旨在将参数绑定到 SQL 语句并存储查询结果。这些类专门针对不同的数据类型进行了特化，如 `int`、`int64_t`、`double`、`std::string`、`std::wstring` 和 blobs。
+
+2. **表和流类**：`zqlite3_table` 表示数据库表，允许绑定参数类型和列。`zqlite3_ostream` 和 `zqlite3_istream` 用于插入/更新操作的参数绑定和存储选择查询结果。
+
+3. **工厂函数**：`make_zqlite3_table` 函数是一个工厂函数，用于创建 `zqlite3_table` 对象，便于设置具有特定列和类型的表。
+
+4. **辅助元函数**：像 `for_each_of_tuple` 和 `split_types` 这样的实用元函数操作元组，有助于实现库的功能。
+
+5. **数据库管理**：提供了打开、关闭和管理 SQLite 数据库的机制（`open_db`、`close_db`、`attach_db`、`detach_db`），包括执行 SQL 命令以进行表创建、插入、更新、选择和 upsert 等操作。
+
+6. **调试和日志记录**：使用条件编译包含调试和日志记录功能（`tracout`、`wtracout`），使库能够根据构建配置输出诊断信息。
+
+7. **错误处理**：包括基本的错误处理功能，类和函数在遇到问题时返回错误代码或设置错误标志。
+
+8. **Pragma 和 SQLite 函数执行**：支持通过 `pragma` 和 `select_function_only` 方法直接执行 SQLite PRAGMA 命令和其他 SQLite 函数。
+
+该库抽象了与直接使用 SQLite C API 相关的大部分样板和手动资源管理，为 C++ 开发人员提供了一个更类型安全和方便的接口，用于处理 SQLite 数据库。
+
 # sqlite3zz
 * header only, template and inline.
 * for sqlite3 c++ programming, help you **get out from sql syntax and c apis**. 
